@@ -45,55 +45,34 @@ public class WildSideScript : MonoBehaviour
 	void Start()
 	{
 		List<int> ButtonsUsed = new List<int>();
-		while (ButtonsUsed.Count() != 16)
+		int ThreeCount;
+		do
 		{
-			ButtonsUsed = new List<int>();
+			ThreeCount = 0;
+			ButtonsUsed = new List<int>(Enumerable.Range(0,36).ToArray().Shuffle().Take(16));
 			ValidButtons = new List<int>();
-			int[] StartingCoordinates = {UnityEngine.Random.Range(0,6), UnityEngine.Random.Range(0,6)};
-			int Coordinates = UnityEngine.Random.Range(0,2);
-			int[] NumbersAdded = Enumerable.Range(0,6).ToArray().Shuffle();
-			for (int x = 0; x < 4; x++)
+			for (int x = 0; x < 2; x++)
 			{
-				switch (Coordinates)
+				for (int y = 0; y < 6; y++)
 				{
-					case 0:
-						ValidButtons.Add(StartingCoordinates[0]*6 + ((StartingCoordinates[1] + NumbersAdded[x]) % 6));
-						ButtonsUsed.Add(StartingCoordinates[0]*6 + ((StartingCoordinates[1] + NumbersAdded[x]) % 6));
-						break;
-					case 1:
-						ValidButtons.Add(((StartingCoordinates[0] + NumbersAdded[x]) % 6)*6 + StartingCoordinates[1]);
-						ButtonsUsed.Add(((StartingCoordinates[0] + NumbersAdded[x]) % 6)*6 + StartingCoordinates[1]);
-						break;
-					default:
-						break;
-				}
-			}
-			
-			int[] Numbers = Enumerable.Range(0,36).ToArray().Shuffle();
-			for (int x = 0; x < Numbers.Length; x++)
-			{
-				if (new[] {Numbers[x]}.Any(c => ButtonsUsed.Contains(c)))
-				{
-					continue;
-				}
-				
-				for (int y = 0; y < 2; y++)
-				{
+					List<int> RandomNumbers = new List<int>();
 					int Count = 0;
 					for (int z = 0; z < 6; z++)
 					{
-						switch (y)
+						switch (x)
 						{
 							case 0:
-								if (new[] {((Numbers[x]/6)*6 + (((Numbers[x]%6) + z) % 6))}.Any(c => ButtonsUsed.Contains(c)))
+								if (new[] {(y*6 + (((y) + z) % 6))}.Any(c => ButtonsUsed.Contains(c)))
 								{
 									Count++;
+									RandomNumbers.Add((y*6 + (((y) + z) % 6)));
 								}
 								break;
 							case 1:
-								if (new[] {((((Numbers[x]/6) + z) % 6)*6 + (Numbers[x]%6))}.Any(c => ButtonsUsed.Contains(c)))
+								if (new[] {((((y) + z) % 6)*6 + y)}.Any(c => ButtonsUsed.Contains(c)))
 								{
 									Count++;
+									RandomNumbers.Add(((((y) + z) % 6)*6 + y));
 								}
 								break;
 							default:
@@ -101,31 +80,25 @@ public class WildSideScript : MonoBehaviour
 						}
 					}
 					
-					if (Count >= 3)
+					if (Count == 3)
 					{
-						break;
+						ValidButtons = new List<int>(RandomNumbers);
+						ThreeCount++;
+						Debug.Log(ThreeCount);
 					}
-					
-					if (y == 1)
-					{
-						ButtonsUsed.Add(Numbers[x]);
-					}
-				}
-				
-				if (ButtonsUsed.Count() == 16)
-				{
-					break;
 				}
 			}
 		}
+		while (ThreeCount != 1);
+		
+		
 		
 		Debug.LogFormat("[Wild Side #{0}] Images shown on each button (in reading order): ", moduleId);
 		string Log = "", Log2 = "";
-		ButtonsUsed.Shuffle();
 		for (int x = 0; x < Buttons.Length; x++)
 		{
 			Buttons[x].GetComponentInChildren<SpriteRenderer>().sprite = Images[ButtonsUsed[x]];
-			Log += x % 4 != 3 ? "Image " + (ButtonsUsed[x] + 1).ToString() + ", " : "Image " + ButtonsUsed[x].ToString();
+			Log += x % 4 != 3 ? "Image " + (ButtonsUsed[x] + 1).ToString() + ", " : "Image " + (ButtonsUsed[x] + 1).ToString();
 			if (x % 4 == 3)
 			{
 				Debug.LogFormat("[Wild Side #{0}] {1}", moduleId, Log);
@@ -134,9 +107,9 @@ public class WildSideScript : MonoBehaviour
 		}
 		Debug.LogFormat("[Wild Side #{0}] -------------------------------------------------------------", moduleId);
 		Debug.LogFormat("[Wild Side #{0}] Correct buttons to press: ", moduleId);
-		for (int x = 0; x < 4; x++)
+		for (int x = 0; x < 3; x++)
 		{
-			Log2 += x % 4 != 3 ? "Button " + (Array.IndexOf(ButtonsUsed.ToArray(), ValidButtons[x]) + 1).ToString() + ", " : "Button " + (Array.IndexOf(ButtonsUsed.ToArray(), ValidButtons[x]) + 1).ToString();
+			Log2 += x % 3 != 2 ? "Button " + (Array.IndexOf(ButtonsUsed.ToArray(), ValidButtons[x]) + 1).ToString() + ", " : "Button " + (Array.IndexOf(ButtonsUsed.ToArray(), ValidButtons[x]) + 1).ToString();
 		}
 		Debug.LogFormat("[Wild Side #{0}] {1}", moduleId, Log2);
 		Debug.LogFormat("[Wild Side #{0}] -------------------------------------------------------------", moduleId);
@@ -156,7 +129,7 @@ public class WildSideScript : MonoBehaviour
 					HL[Press].GetComponentInChildren<MeshRenderer>().material = Colors[0];
 					SolveCount++;
 					Debug.LogFormat("[Wild Side #{0}] You pressed Button {1}. That was correct.", moduleId, Press+1);
-					if (SolveCount == 4)
+					if (SolveCount == 3)
 					{
 						Module.HandlePass();
 						ModuleSolved = true;
