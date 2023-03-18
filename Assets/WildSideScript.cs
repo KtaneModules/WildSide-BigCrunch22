@@ -2,10 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using KModkit;
 
 public class WildSideScript : MonoBehaviour
 {
@@ -84,7 +82,6 @@ public class WildSideScript : MonoBehaviour
 					{
 						ValidButtons = new List<int>(RandomNumbers);
 						ThreeCount++;
-						Debug.Log(ThreeCount);
 					}
 				}
 			}
@@ -118,7 +115,7 @@ public class WildSideScript : MonoBehaviour
 	void PressButton(int Press)
 	{
 		Buttons[Press].GetComponent<KMSelectable>().AddInteractionPunch(0.2f);
-		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+		Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, Buttons[Press].transform);
 		if (!ModuleSolved)
 		{
 			if (new[] {Press}.Any(c => !NumberPressed.Contains(c)))
@@ -182,6 +179,18 @@ public class WildSideScript : MonoBehaviour
 					yield break;
 				}
 				Buttons[Out - 1].GetComponent<KMSelectable>().OnInteract();
+				yield return new WaitForSecondsRealtime(0.2f);
+			}
+		}
+	}
+
+	IEnumerator TwitchHandleForcedSolve()
+	{
+		for (int j = 0; j < 16; j++)
+		{
+			if (!NumberPressed.Contains(j) && new[] {Array.IndexOf(Images, Buttons[j].GetComponentInChildren<SpriteRenderer>().sprite)}.Any(c => ValidButtons.Contains(c)))
+			{
+				Buttons[j].GetComponent<KMSelectable>().OnInteract();
 				yield return new WaitForSecondsRealtime(0.2f);
 			}
 		}
